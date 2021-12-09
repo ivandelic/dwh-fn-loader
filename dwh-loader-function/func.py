@@ -64,6 +64,10 @@ def handler(ctx, data: io.BytesIO = None):
             get_dbwallet_from_autonomousdb()
             dbpool = cx_Oracle.SessionPool(args.get("DB_USER"), args.get("DB_PASS"), args.get("DB_SERVICE"), min=1, max=1, encoding="UTF-8", nencoding="UTF-8")
 
+            with dbpool.acquire() as dbconnection:
+                with dbconnection.cursor() as dbcursor:
+                    dbcursor.execute("INSERT INTO tradinghub VALUES ('" + str(xml) + ")")
+
             return response.Response(ctx, response_data=json.dumps({"Lake updated": str(xml)}), headers={"Content-Type": "application/json"})
         else:
             logging.getLogger().info("Unable to find staging object")
