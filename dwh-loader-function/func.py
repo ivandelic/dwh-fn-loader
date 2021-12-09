@@ -4,7 +4,6 @@ import logging
 from fdk import response
 import collections
 import os
-import osmanager
 import datetime
 import oci
 import random
@@ -19,6 +18,16 @@ args = collections.ChainMap(os.environ, defargs)
 
 dbwalletzip_location = "/tmp/dbwallet.zip"
 
+def readobject(bucketName, objectName):
+    signer = oci.auth.signers.get_resource_principals_signer()
+    client = oci.object_storage.ObjectStorageClient(config={}, signer=signer)
+    namespace = client.get_namespace().data
+    try:
+        obj = client.get_object(namespace, bucketName, objectName)
+    except Exception as e:
+        logging.getLogger().error(str(e.message))
+        obj = None
+    return obj
 
 def get_dbwallet_from_autonomousdb():
     signer = oci.auth.signers.get_resource_principals_signer() 
@@ -43,10 +52,10 @@ def handler(ctx, data: io.BytesIO = None):
 
         if eventtype is not None and eventtype == "com.oraclecloud.objectstorage.createobject":
             # Cloud Event is triggered
-            stageobj = osmanager.readobject(eventbody["data"]["additionalDetails"]["bucketName"], eventbody["data"]["resourceName"])
+            stageobj = readobject(eventbody["data"]["additionalDetails"]["bucketName"], eventbody["data"]["resourceName"])
         else:
             # Manual trigger
-            stageobj = osmanager.readobject(args.get("bucketNameStaging"), args.get("objectNameStaging"))
+            stageobj = readobject(args.get("bucketNameStaging"), args.get("objectNameStaging"))
 
         if stageobj.status == 200:
             xml = stageobj.data.text
