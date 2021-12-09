@@ -66,7 +66,7 @@ def handler(ctx, data: io.BytesIO = None):
 
             with dbpool.acquire() as dbconnection:
                 with dbconnection.cursor() as dbcursor:
-                    dbcursor.execute("INSERT INTO tradinghub VALUES ('" + str(xml) + ")")
+                    dbcursor.execute("INSERT INTO tradinghub VALUES ('" + str(xml) + "')")
 
             return response.Response(ctx, response_data=json.dumps({"Lake updated": str(xml)}), headers={"Content-Type": "application/json"})
         else:
